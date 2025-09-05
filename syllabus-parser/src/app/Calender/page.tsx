@@ -16,7 +16,7 @@ export default function Calendar() {
 
   return (
     <div>
-      <h1>My Calendar</h1>
+      <h1>My Calendar dummy</h1>
       <button onClick={fetchAssignments}>Load Assignments</button>
       <ul>
         {assignments.map((a, i) => (
