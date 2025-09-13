@@ -18,6 +18,7 @@ export async function GET() {
 export interface Syllabus {
   title: string;
   date: string;
+  topics: string;
   details: string;
 }
 
@@ -27,6 +28,13 @@ export interface Parser {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function chunkText(text: string, chunkSize = 2000) {
+  const chunks: string[] = [];
+  for (let i = 0; i < text.length; i += chunkSize) {
+    chunks.push(text.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 
 
 
@@ -43,37 +51,51 @@ export async function POST(req: Request) {
       );
     }
 
-    const completion = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: `You are a helpful assistant. Extract **all assignments, quizzes, and exams** from the syllabus below.
-      Return the data ONLY as a JSON array with this format:
-      [
-        {
-          "title": "Assignment title",
-          "date": "YYYY-MM-DD or descriptive",
-          "details": "Any extra info about the assignment"
-        }
-      ]
-
-      Do NOT include reading chapters, class prep, or general notes. Include every graded item mentioned.
-
-      Syllabus text:${text}
-      `,
-    });
-
-    // @ts-ignore: typings are weird here
-    let raw = completion.output_text ?? "[]";
-
-    raw = raw.replace(/```json|```/g, "").trim();
-
-    console.log(raw)
-
+    const chunks = chunkText(text);
     let assignments: Syllabus[] = [];
-    try {
-      assignments = JSON.parse(raw) as Syllabus[];
-    } catch (err) {
-      console.error("Failed to parse JSON:", raw, err);
-      assignments = [];
+
+    for (const chunk of chunks) {
+
+      console.log("server side:", chunk)
+      const completion = await openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: `You are an assistant that extracts a full class schedule from a syllabus.
+
+                From the text below, extract EVERY class meeting with:
+                - date (if listed)
+                - class number or week
+                - topics covered
+                - readings or materials listed
+
+                Return ONLY as a JSON array with this format:
+                [
+                {
+                  "date": "2021-08-24",
+                  "title": "Class 1 (Week 1)",
+                  "topics": "Introduction, course expectations",
+                  "details": [
+                    "Our Constitution and Form of Government (A Primer)",
+                    "R. Beeman, The Constitutional Convention of 1787: A Revolution in Government",
+                    "How to Read Our Constitution...",
+                    "U.S. Constitution, Article ..."
+                  ]
+                }
+                ]
+
+                Syllabus text:
+                ${chunk}
+                `,
+      });
+
+      let raw = completion.output_text ?? "[]";
+      raw = raw.replace(/```json|```/g, "").trim();
+
+      try {
+        const parsed = JSON.parse(raw) as Syllabus[];
+        assignments.push(...parsed);
+      } catch (err) {
+        console.error("Failed to parse JSON:", raw, err);
+      }
     }
 
     return NextResponse.json({ assignments });

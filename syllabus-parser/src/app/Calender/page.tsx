@@ -7,7 +7,7 @@ import 'pdfjs-dist/legacy/build/pdf.worker.mjs'
 
 
 export default function Calendar() {
-  const [assignments, setAssignments] = useState<{ title: string; date: string; details: string }[]>([]);
+  const [assignments, setAssignments] = useState<{ title: string; date: string; topics: string; details: string }[]>([]);
 
   async function extractPdfText(file: File) {
     const arrayBuffer = await file.arrayBuffer();
@@ -51,7 +51,7 @@ export default function Calendar() {
       <ul>
         {assignments.map((a, i) => (
           <li key={i}>
-            {a.title} - {a.date}
+            {a.title} - {a.date}, {a.topics}: "{a.details}"
           </li>
         ))}
       </ul>
