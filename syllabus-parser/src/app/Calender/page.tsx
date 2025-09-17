@@ -30,6 +30,8 @@ export default function Calendar() {
   const [isClient, setIsClient] = useState(false);
   const [view, setView] = useState<typeof Views[keyof typeof Views]>("month");
   const [date, setDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<any>(null); // event for modal
+
 
 
   useEffect(() => {
@@ -69,19 +71,21 @@ export default function Calendar() {
     setAssignments(data.assignments ?? []);
   }
 
-  function inferYear(assignments: { date: string }[]) {
-    const years: Record<string, number> = {};
+  function inferYear(assignments: { date: string }[]): string {
+    const yearCounts: Record<string, number> = {};
 
     assignments.forEach(a => {
-      const match = a.date.match(/\d{4}/);
-      if (match) {
-        const year = match[0];
-        years[year] = (years[year] || 0) + 1;
+      if (a.date) {
+        const yearMatch = a.date.match(/\b(20\d{2})\b/);
+        if (yearMatch) {
+          const year = yearMatch[1];
+          yearCounts[year] = (yearCounts[year] || 0) + 1;
+        }
       }
     });
 
-    const sortedYears = Object.entries(years).sort((a, b) => b[1] - a[1]);
-    return sortedYears.length > 0 ? sortedYears[0][0] : new Date().getFullYear().toString();
+    const sortedYears = Object.entries(yearCounts).sort((a, b) => b[1] - a[1]);
+    return sortedYears.length > 0 ? sortedYears[0][0] : String(new Date().getFullYear()); // fallback = current year
   }
 
   const inferredYear = inferYear(assignments);
@@ -112,10 +116,14 @@ const events: Event[] = assignments.map((a) => {
 
 
 
-  console.log(assignments)
+  console.log(selectedEvent)
 
   return (
+
     <div>
+      <div className="bg-blue-500 text-blue-700 p-4 rounded-lg">
+        Hello Tailwind!
+      </div>
       <h1>My Calendar dummy</h1>
       <input type="file" accept="application/pdf" onChange={handleUpload} />
       <ul>
@@ -137,11 +145,32 @@ const events: Event[] = assignments.map((a) => {
             style={{ height: "100%" }}
             popup
             tooltipAccessor={(event: any) => event.resource}
-            view={view}                  // controlled view
-            onView={(newView) => setView(newView)} // handle view change
-            date={date}                  // controlled date
+            view={view}
+            onView={(newView) => setView(newView)}
+            date={date}
             onNavigate={(newDate) => setDate(newDate)}
+            onSelectEvent={(event) => setSelectedEvent(event)}
           />
+        </div>
+      )}
+
+{selectedEvent && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-2">{selectedEvent.title}</h2>
+            <p className="text-gray-700 mb-2">
+              <strong>Date:</strong> {selectedEvent.start.toDateString()}
+            </p>
+            <p className="text-gray-700 mb-2">
+              <strong>Details:</strong> {selectedEvent.resource}
+            </p>
+            <button
+              onClick={() => setSelectedEvent(null)}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
