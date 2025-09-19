@@ -104,7 +104,7 @@ export default function Calendar() {
   return (
 
     <div>
-      <h1 className='text-center'>My Calendar dummy</h1>
+      <h1 className='text-center !m-4'>My Calendar dummy</h1>
 
       <div className='p-6 !p-6 flex flex-col'>
       <div className="flex justify-between h-8">
@@ -128,12 +128,12 @@ export default function Calendar() {
       </label>
       <div onClick={() => setIsCalender(!isCalender)} className='cursor-pointer flex'>
       { isCalender ?
-      <i className="fi fi-rr-calendar-lines text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i> :
-      <i className="fi fi-rr-rectangle-list text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i>
+      <i className="fi fi-rr-rectangle-list text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i> :
+      <i className="fi fi-rr-calendar-lines text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i>
       }
       </div>
       </div>
-{   !isCalender && <div className="h-0.5 w-full bg-white !mt-3 rounded-2"></div>
+{   !isCalender ? <div className="h-0.5 w-full bg-white !mt-3 rounded-2"></div> : <div className="h-0.5 w-full bg-transparent !mt-3 rounded-2"></div>
 }      { !isCalender && <div className="flex !pt-4">
       <ul className="!space-y-2">
         {assignments.map((a, i) => (
@@ -147,7 +147,7 @@ export default function Calendar() {
 
        {/* Calendar view */}
        {isClient && isCalender ? (
-        <div style={{ height: "80vh", marginTop: "2rem" }}>
+        <div style={{ height: "80vh", marginTop: "1rem" }}>
           <BigCalendar
             localizer={localizer}
             events={events}
@@ -169,7 +169,7 @@ export default function Calendar() {
       {selectedEvent && (
   <div
     className="fixed inset-0 flex items-center justify-center bg-black/50 z-40 cursor-pointer"
-    onClick={() => setSelectedEvent(null)} 
+    onClick={() => setSelectedEvent(null)}
   >
     <div
       className="bg-white rounded-lg shadow-lg !p-4 max-w-md w-full z-50 relative"
