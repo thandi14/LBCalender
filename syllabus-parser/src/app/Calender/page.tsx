@@ -31,8 +31,9 @@ export default function Calendar() {
   const [view, setView] = useState<typeof Views[keyof typeof Views]>("month");
   const [date, setDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<any>(null); // event for modal
-
-
+  const [isCalender, setIsCalender] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -54,6 +55,8 @@ export default function Calendar() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsLoading(true)
+
 
     const text = await extractPdfText(file);
 
@@ -68,6 +71,7 @@ export default function Calendar() {
 
     const data = await res.json();
     console.log(data)
+    setIsLoading(false)
     setAssignments(data.assignments ?? []);
   }
 
@@ -100,15 +104,38 @@ export default function Calendar() {
   return (
 
     <div>
-      <div className="bg-blue-500 text-blue-700 p-4 rounded-lg">
-        Hello Tailwind!
+      <h1 className='text-center'>My Calendar dummy</h1>
+
+      <div className='p-6 !p-6 flex flex-col'>
+      <div className="flex justify-between h-8">
+      <label htmlFor="file-upload" className="cursor-pointer flex gap-1 items-center">
+        <i className="fi fi-br-upload text-black bg-white p-4 flex justify-center items-center w-10 h-full rounded-sm text-xl"></i>
+      { isLoading && <div className="flex justify-center items-center h-5 w-6 px-5">
+       <img src="/unnamed.gif" alt="Loading" className="w-4 h-full" />
+       </div> }
+        <span className="!pl-1 flex items-center">{selectedFile && !isLoading ? selectedFile.name : ""}</span>
+        <input
+          id="file-upload"
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setSelectedFile(file); // store selected file in state
+            handleUpload(e);
+          }}
+          className="hidden"
+        />
+      </label>
+      <div onClick={() => setIsCalender(!isCalender)} className='cursor-pointer flex'>
+      { isCalender ?
+      <i className="fi fi-rr-calendar-lines text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i> :
+      <i className="fi fi-rr-rectangle-list text-black bg-white p-4 flex justify-center items-center w-10 rounded-sm text-xl"></i>
+      }
       </div>
-      <h1>My Calendar dummy</h1>
-      <i className="fi fi-br-upload fill-white"></i>
-      <i className="fi fi-rr-rectangle-list fill-white"></i>
-      <i className="fi fi-rr-calendar-lines"></i>
-      <input type="file" accept="application/pdf" onChange={handleUpload} />
-      <ul>
+      </div>
+{   !isCalender && <div className="h-0.5 w-full bg-white !mt-3 rounded-2"></div>
+}      { !isCalender && <div className="flex !pt-4">
+      <ul className="!space-y-2">
         {assignments.map((a, i) => (
           <li key={i}>
           {a.title} - {a.date} {a.topics}:
@@ -116,9 +143,10 @@ export default function Calendar() {
         </li>
         ))}
       </ul>
+      </div>}
 
        {/* Calendar view */}
-       {isClient && (
+       {isClient && isCalender ? (
         <div style={{ height: "80vh", marginTop: "2rem" }}>
           <BigCalendar
             localizer={localizer}
@@ -135,27 +163,35 @@ export default function Calendar() {
             onSelectEvent={(event) => setSelectedEvent(event)}
           />
         </div>
-      )}
+      ) : <div></div>}
+      </div>
 
-{selectedEvent && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-2">{selectedEvent.title}</h2>
-            <p className="text-gray-700 mb-2">
-              <strong>Date:</strong> {selectedEvent.start.toDateString()}
-            </p>
-            <p className="text-gray-700 mb-2" style={{ whiteSpace: "pre-line" }}>
-              <strong>Details:</strong> {selectedEvent.resource}
-            </p>
-            <button
-              onClick={() => setSelectedEvent(null)}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {selectedEvent && (
+  <div
+    className="fixed inset-0 flex items-center justify-center bg-black/50 z-40 cursor-pointer"
+    onClick={() => setSelectedEvent(null)} 
+  >
+    <div
+      className="bg-white rounded-lg shadow-lg !p-4 max-w-md w-full z-50 relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2 className="text-black text-xl font-bold mb-2">{selectedEvent.title}</h2>
+      <p className="text-gray-700 mb-2">
+        <strong>Date:</strong> {selectedEvent.start.toDateString()}
+      </p>
+      <p className="text-gray-700 mb-2" style={{ whiteSpace: "pre-line" }}>
+        <strong>Details:</strong> {selectedEvent.resource}
+      </p>
+      <button
+        onClick={() => setSelectedEvent(null)}
+        className="cursor-pointer !mt-4 bg-blue-500 text-white !p-1 rounded-lg hover:bg-blue-600"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
+
 }
