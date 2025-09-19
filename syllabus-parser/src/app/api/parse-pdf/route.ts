@@ -49,32 +49,32 @@ function getCalendarWeek(dateStr: string): number {
   return Math.floor((pastDaysOfYear + firstDayOfYear.getDay()) / 7) + 1;
 }
 
-function normalizeDetails(details: string | string[]): string {
-  let text = "";
+// function normalizeDetails(details: string | string[]): string {
+//   let text = "";
 
-  if (Array.isArray(details)) {
-    text = details.join(" ");
-  } else if (typeof details === "string") {
-    text = details;
-  } else {
-    return "";
-  }
+//   if (Array.isArray(details)) {
+//     text = details.join(" ");
+//   } else if (typeof details === "string") {
+//     text = details;
+//   } else {
+//     return "";
+//   }
 
-  const hasBullets = text.includes("•");
+//   const hasBullets = text.includes("•");
 
-  if (hasBullets) {
-    text = text.replace(/(^|\S)\s*•/g, "$1\n•");
-  } else {
-    text = text.replace(/;\s*/g, ";\n• ");
-  }
+//   if (hasBullets) {
+//     text = text.replace(/(^|\S)\s*•/g, "$1\n•");
+//   } else {
+//     text = text.replace(/;\s*/g, ";\n");
+//   }
 
-  const parts = text
-    .split("\n")
-    .map(t => t.trim())
-    .filter(Boolean);
+//   const parts = text
+//     .split("\n")
+//     .map(t => t.trim())
+//     .filter(Boolean);
 
-  return parts.join("\n");
-}
+//   return parts.join("\n");
+// }
 
 
 
@@ -137,8 +137,8 @@ export async function POST(req: Request) {
 
                   "• Item two"
                 - Treat any day-of-week prefix (M, T, W, Th, F, Mon, Tue, Wed, Thu, Fri) as a separate class date.
-                If multiple day prefixes appear on the same line or paragraph, split them into separate class objects.
-
+                - If multiple day prefixes appear on the same line or paragraph, split them into separate class objects.
+                - If the assignment does not have a separate topic, return topics as an empty string ("") rather than copying details.
 
 
 
@@ -169,11 +169,11 @@ export async function POST(req: Request) {
 
       try {
         const parsed = JSON.parse(raw) as Syllabus[];
-        parsed.forEach(entry => {
-          if (entry.details) {
-            entry.details = normalizeDetails(entry.details); // always string now
-          }
-        });
+        // parsed.forEach(entry => {
+        //   if (entry.details) {
+        //     entry.details = normalizeDetails(entry.details);
+        //   }
+        // });
         assignments.push(...parsed);
       } catch (err) {
         console.error("Failed to parse JSON:", raw, err);

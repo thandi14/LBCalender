@@ -12,6 +12,7 @@ import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 
+
 const locales = {
   "en-US": require("date-fns/locale/en-US"),
 };
@@ -30,7 +31,7 @@ export default function Calendar() {
   const [isClient, setIsClient] = useState(false);
   const [view, setView] = useState<typeof Views[keyof typeof Views]>("month");
   const [date, setDate] = useState(new Date());
-  const [selectedEvent, setSelectedEvent] = useState<any>(null); // event for modal
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isCalender, setIsCalender] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -38,6 +39,49 @@ export default function Calendar() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // function normalize(str: string) {
+  //   return str
+  //     .toLowerCase()
+  //     .replace(/&/g, "and")   // treat "&" as "and"
+  //     .replace(/\s+/g, " ")   // collapse multiple spaces
+  //     .trim();
+  // }
+
+
+  async function handleAddToCalendar() {
+    try {
+      const access_token = localStorage.getItem("google_access_token");
+
+      if (!access_token) {
+        window.location.href = "/api/oauth/start";
+        return;
+      }
+
+      const res = await fetch("/api/add-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ events: assignments, access_token }),
+      });
+
+      const data = await res.json();
+      console.log("Events added:", data);
+      alert("Assignments added to Google Calendar!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add events to Google Calendar.");
+    }
+  }
+
+  useEffect(() => {
+    if (assignments.length > 0) {
+      const confirmed = window.confirm("Do you want to add all assignments to Google Calendar?");
+      if (confirmed) {
+        handleAddToCalendar();
+      }
+    }
+  }, [assignments]);
+
 
   async function extractPdfText(file: File) {
     const arrayBuffer = await file.arrayBuffer();
@@ -55,14 +99,10 @@ export default function Calendar() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setIsLoading(true)
-
-
     const text = await extractPdfText(file);
 
-    console.log(text)
-
-    // send text to your OpenAI backend
     const res = await fetch("/api/parse-pdf", {
       method: "POST",
       body: JSON.stringify({ text }),
@@ -70,14 +110,13 @@ export default function Calendar() {
     });
 
     const data = await res.json();
-    console.log(data)
     setIsLoading(false)
     setAssignments(data.assignments ?? []);
   }
 
   function parseLocalDate(dateStr: string) {
     const [year, month, day] = dateStr.split("-").map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed
+    return new Date(year, month - 1, day);
   }
 
 
@@ -98,12 +137,12 @@ export default function Calendar() {
   }, [assignments]);
 
 
-
-  console.log(selectedEvent)
+  console.log(assignments)
 
   return (
 
     <div>
+
       <h1 className='text-center !m-4'>My Calendar dummy</h1>
 
       <div className='p-6 !p-6 flex flex-col'>
@@ -120,7 +159,7 @@ export default function Calendar() {
           accept="application/pdf"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) setSelectedFile(file); // store selected file in state
+            if (file) setSelectedFile(file);
             handleUpload(e);
           }}
           className="hidden"
@@ -133,15 +172,24 @@ export default function Calendar() {
       }
       </div>
       </div>
+
+      {/* List view */}
 {   !isCalender ? <div className="h-0.5 w-full bg-white !mt-3 rounded-2"></div> : <div className="h-0.5 w-full bg-transparent !mt-3 rounded-2"></div>
 }      { !isCalender && <div className="flex !pt-4">
       <ul className="!space-y-2">
-        {assignments.map((a, i) => (
+      {assignments.map((a, i) => {
+        const detailsText = Array.isArray(a.details)
+          ? a.details.map(d => (d.startsWith("•") ? `\n${d}` : d)).join(" ")
+          : a.details;
+
+        return (
           <li key={i}>
-          {a.title} - {a.date} {a.topics}:
-          <span style={{ whiteSpace: "pre-line" }}> {a.details}</span>
-        </li>
-        ))}
+            {a.title} - {!a.topics ? ` ${a.date}:` : a.date} {a.topics && ` ${a.topics}:`}
+            <span style={{ whiteSpace: "pre-line" }}> {detailsText}</span>
+          </li>
+        );
+      })}
+
       </ul>
       </div>}
 
@@ -179,8 +227,11 @@ export default function Calendar() {
       <p className="text-gray-700 mb-2">
         <strong>Date:</strong> {selectedEvent.start.toDateString()}
       </p>
-      <p className="text-gray-700 mb-2" style={{ whiteSpace: "pre-line" }}>
-        <strong>Details:</strong> {selectedEvent.resource}
+      <p className="text-gray-700 mb-2 " style={{ whiteSpace: "pre-line" }}>
+  <strong>Details:</strong>{" "}
+        {Array.isArray(selectedEvent.resource)
+          ? selectedEvent.resource.map((d: string) => (d.startsWith("•") ? `\n${d}` : d)).join(" ")
+          : selectedEvent.resource}
       </p>
       <button
         onClick={() => setSelectedEvent(null)}
