@@ -71,42 +71,21 @@ export default function Calendar() {
     setAssignments(data.assignments ?? []);
   }
 
-  function inferYear(assignments: { date: string }[]): string {
-    const yearCounts: Record<string, number> = {};
-
-    assignments.forEach(a => {
-      if (a.date) {
-        const yearMatch = a.date.match(/\b(20\d{2})\b/);
-        if (yearMatch) {
-          const year = yearMatch[1];
-          yearCounts[year] = (yearCounts[year] || 0) + 1;
-        }
-      }
-    });
-
-    const sortedYears = Object.entries(yearCounts).sort((a, b) => b[1] - a[1]);
-    return sortedYears.length > 0 ? sortedYears[0][0] : String(new Date().getFullYear()); // fallback = current year
+  function parseLocalDate(dateStr: string) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day); // month is 0-indexed
   }
 
-  const inferredYear = inferYear(assignments);
 
-const events: Event[] = assignments.map((a) => {
-  let dateStr = a.date;
-
-  if (!/\d{4}/.test(dateStr)) {
-    dateStr += `-${inferredYear}`;
-  }
-
-  const dateObj = new Date(dateStr);
-
-  return {
+  const events: Event[] = assignments.map((a) => ({
     title: a.title,
-    start: dateObj,
-    end: dateObj,
+    start: parseLocalDate(a.date),
+    end: parseLocalDate(a.date),
     allDay: true,
     resource: a.details,
-  };
-});
+  }));
+
+
 
   useEffect(() => {
     if (assignments.length > 0) {
@@ -125,12 +104,16 @@ const events: Event[] = assignments.map((a) => {
         Hello Tailwind!
       </div>
       <h1>My Calendar dummy</h1>
+      <i className="fi fi-br-upload fill-white"></i>
+      <i className="fi fi-rr-rectangle-list fill-white"></i>
+      <i className="fi fi-rr-calendar-lines"></i>
       <input type="file" accept="application/pdf" onChange={handleUpload} />
       <ul>
         {assignments.map((a, i) => (
           <li key={i}>
-            {a.title} - {a.date}, {a.topics}: "{a.details}"
-          </li>
+          {a.title} - {a.date} {a.topics}:
+          <span style={{ whiteSpace: "pre-line" }}> {a.details}</span>
+        </li>
         ))}
       </ul>
 
@@ -161,7 +144,7 @@ const events: Event[] = assignments.map((a) => {
             <p className="text-gray-700 mb-2">
               <strong>Date:</strong> {selectedEvent.start.toDateString()}
             </p>
-            <p className="text-gray-700 mb-2">
+            <p className="text-gray-700 mb-2" style={{ whiteSpace: "pre-line" }}>
               <strong>Details:</strong> {selectedEvent.resource}
             </p>
             <button
