@@ -5,7 +5,7 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import 'pdfjs-dist/legacy/build/pdf.worker.mjs';
 import { Calendar as BigCalendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import enUS from 'date-fns/locale/en-US';
+import { enUS } from 'date-fns/locale';
 import Image from 'next/image';
 import { format, parse, startOfWeek, getDay } from "date-fns";
 
