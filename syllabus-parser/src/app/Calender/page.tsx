@@ -51,7 +51,7 @@ export default function Calendar() {
     try {
       const access_token = localStorage.getItem('google_access_token');
       if (!access_token) {
-        window.location.href = '/api/oauth/start';
+        window.open('/api/oauth/start', '_blank');
         return;
       }
 
