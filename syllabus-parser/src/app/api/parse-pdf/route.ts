@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
     const chunks = chunkText(text);
 
-    let assignments: Syllabus[] = [];
+    const assignments: Syllabus[] = [];
 
     for (const chunk of chunks) {
 
