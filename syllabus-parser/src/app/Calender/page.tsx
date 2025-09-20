@@ -10,11 +10,14 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import enUS from "date-fns/locale/en-US";
+import Image from 'next/image';
+
 
 
 
 const locales = {
-  "en-US": require("date-fns/locale/en-US"),
+  "en-US": enUS,
 };
 
 const localizer = dateFnsLocalizer({
@@ -25,13 +28,27 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+type MyEvent = {
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: boolean;
+  resource: string | string[];
+};
+
+
 
 export default function Calendar() {
-  const [assignments, setAssignments] = useState<{ title: string; date: string; topics: string; details: string }[]>([]);
+  const [assignments, setAssignments] = useState<{
+    title: string;
+    date: string;
+    topics: string;
+    details: string | string[];
+  }[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [view, setView] = useState<typeof Views[keyof typeof Views]>("month");
   const [date, setDate] = useState(new Date());
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
   const [isCalender, setIsCalender] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -80,7 +97,7 @@ export default function Calendar() {
         handleAddToCalendar();
       }
     }
-  }, [assignments]);
+  }, [assignments, handleAddToCalendar]);
 
 
   async function extractPdfText(file: File) {
@@ -120,15 +137,13 @@ export default function Calendar() {
   }
 
 
-  const events: Event[] = assignments.map((a) => ({
+  const events: MyEvent[] = assignments.map((a) => ({
     title: a.title,
     start: parseLocalDate(a.date),
     end: parseLocalDate(a.date),
     allDay: true,
     resource: a.details,
   }));
-
-
 
   useEffect(() => {
     if (assignments.length > 0) {
@@ -150,7 +165,14 @@ export default function Calendar() {
       <label htmlFor="file-upload" className="cursor-pointer flex gap-1 items-center">
         <i className="fi fi-br-upload text-black bg-white p-4 flex justify-center items-center w-10 h-full rounded-sm text-xl"></i>
       { isLoading && <div className="flex justify-center items-center h-5 w-6 px-5">
-       <img src="/unnamed.gif" alt="Loading" className="w-4 h-full" />
+      <div className="relative w-4 h-4">
+        <Image
+          src="/unnamed.gif"
+          alt="Loading"
+          fill
+          style={{ objectFit: "contain" }}
+        />
+      </div>
        </div> }
         <span className="!pl-1 flex items-center">{selectedFile && !isLoading ? selectedFile.name : ""}</span>
         <input
@@ -179,8 +201,8 @@ export default function Calendar() {
       <ul className="!space-y-2">
       {assignments.map((a, i) => {
         const detailsText = Array.isArray(a.details)
-          ? a.details.map(d => (d.startsWith("•") ? `\n${d}` : d)).join(" ")
-          : a.details;
+        ? a.details.map(d => (d.startsWith("•") ? `\n${d}` : d)).join(" ")
+        : a.details;
 
         return (
           <li key={i}>
