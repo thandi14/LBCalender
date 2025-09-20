@@ -161,8 +161,10 @@ export async function POST(req: Request) {
 
 
     return NextResponse.json({ assignments });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error in POST /parse-pdf:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message =
+    err instanceof Error ? err.message : "Unknown server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
