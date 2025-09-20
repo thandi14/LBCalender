@@ -49,38 +49,6 @@ function getCalendarWeek(dateStr: string): number {
   return Math.floor((pastDaysOfYear + firstDayOfYear.getDay()) / 7) + 1;
 }
 
-// function normalizeDetails(details: string | string[]): string {
-//   let text = "";
-
-//   if (Array.isArray(details)) {
-//     text = details.join(" ");
-//   } else if (typeof details === "string") {
-//     text = details;
-//   } else {
-//     return "";
-//   }
-
-//   const hasBullets = text.includes("•");
-
-//   if (hasBullets) {
-//     text = text.replace(/(^|\S)\s*•/g, "$1\n•");
-//   } else {
-//     text = text.replace(/;\s*/g, ";\n");
-//   }
-
-//   const parts = text
-//     .split("\n")
-//     .map(t => t.trim())
-//     .filter(Boolean);
-
-//   return parts.join("\n");
-// }
-
-
-
-
-
-
 
 export async function POST(req: Request) {
   try {
@@ -169,11 +137,6 @@ export async function POST(req: Request) {
 
       try {
         const parsed = JSON.parse(raw) as Syllabus[];
-        // parsed.forEach(entry => {
-        //   if (entry.details) {
-        //     entry.details = normalizeDetails(entry.details);
-        //   }
-        // });
         assignments.push(...parsed);
       } catch (err) {
         console.error("Failed to parse JSON:", raw, err);
