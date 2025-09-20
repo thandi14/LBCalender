@@ -137,8 +137,8 @@ export default function Calendar() {
           <label htmlFor="file-upload" className="cursor-pointer flex gap-1 items-center">
             <i className="fi fi-br-upload text-black bg-white !p-4 flex justify-center items-center w-10 h-full rounded-sm text-xl" />
             {isLoading && (
-              <div className="flex justify-center items-center h-5 w-6 !px-5">
-                <div className="relative w-4 h-4">
+              <div className="flex justify-center items-center h-13 w-14 !px-4.5 !mr-8">
+                <div className="relative w-12 h-12">
                   <Image src="/unnamed.gif" alt="Loading" fill style={{ objectFit: 'contain' }} />
                 </div>
               </div>
